@@ -130,6 +130,11 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
   </ul>
 </nav>
 
@@ -160,7 +165,7 @@
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/27/Raspberry-4B-Play-Record-2-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar_img.jpeg">
       <meta itemprop="name" content="Chenyzh">
       <meta itemprop="description" content="Coffee & Keyboard with the planet.">
     </span>
@@ -171,7 +176,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/12/27/Raspberry-4B-Play-Record-2-md/" class="post-title-link" itemprop="url">Raspberry-4B-Play-Record-2.md</a>
+            <a href="/2020/12/27/Raspberry-4B-Play-Record-2-md/" class="post-title-link" itemprop="url">树莓派4B 玩耍记录 （2）</a>
         </h2>
 
         <div class="post-meta">
@@ -180,10 +185,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-27 20:42:45 / Modified: 22:34:07" itemprop="dateCreated datePublished" datetime="2020-12-27T20:42:45+00:00">2020-12-27</time>
+              <time title="Created: 2020-12-27 20:42:45" itemprop="dateCreated datePublished" datetime="2020-12-27T20:42:45+00:00">2020-12-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-28 14:36:56" itemprop="dateModified" datetime="2020-12-28T14:36:56+00:00">2020-12-28</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -205,7 +216,28 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          
+          <p>基本上折腾好了树莓派的操作系统，也修改了默认登陆为终端。我接下来开始准备折腾下自己的编程环境。倒也不是需要直接在树莓派上面写代码，不过我还是很希望可以提供一个远程的代码环境。虽然我依旧有了 github 的 workspace，免费的真香，但是笔记树莓派可以直接接触硬件，有些 OS 相关的代码大概还是得在这玩意上面写。</p>
+<p>因为淘宝给我发了 64GB 的内存卡，感觉有点不够花。一想还是得用云平台，翻出了自己的 MSDN 账号，搞了 140 刀每月的 Azure 用量。开了一个 Storage Account。这样可以把一部分不常用的文件塞进远程托管了。</p>
+<p><img src="https://parallelcomputing.readthedocs.io/zh/latest/_images/CengCiCunChu.jpg" alt="Computer Image Storage"></p>
+<p>至于打包完成的软件，其实也没有必要堆在本地，直接塞进 Docker 然后把镜像放远程就好。这样基本可以保证我的本地只有代码和当前执行的一些依赖。最后再搞一个自动运行的清理编译缓存的 cron，世界就清净了。</p>
+<p>废话少说，先开云平台的账号，我这里选择的巨硬的 Azure，主要就是 Credit 给的多，我直呼爸爸！我用了两个产品，<a target="_blank" rel="noopener" href="https://azure.microsoft.com/en-us/services/container-registry/">Azure Container Retristry</a> 和 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview">Azure Storage Account</a>.</p>
+<p>第一个用于托管 Docker 镜像，一个用于托管文件。基本就是去官网点点点。折腾完了以后我开始调教<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli">Azure Cli</a>，我现在也没有 GUI，有个命令行还是不能少的。</p>
+<p>然后安装完我发现，这个傻逼 CLI 居然给 Debian 的安装包有问题。安装完直接内部指定了 AMD64 版本的 Python，而我们可爱的树莓派，是屌丝 ARMHF 的。你是不是逗我玩？</p>
+<p>因为是 Python 的依赖关系，那我们就直接跳过包管理呗。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip3 install azure-cli</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>然后开始认证自己的账号：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">az login</span><br><span class="line">az account show</span><br></pre></td></tr></table></figure>
+<p>一切 OK。再来搞一个 Docker，CE 版本的 Docker 原生支持 ARM。这里需要注意的是，Docker 会吃掉一定内存，所以官方的原话也是，你的树莓派要是没有个 2G 内存，你就特么别出来玩，<del>别出来丢人，赶紧的花钱买个好的</del>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update &amp;&amp; sudo apt-get upgrade</span><br><span class="line">curl -fsSL https://get.docker.com -o get-docker.sh</span><br><span class="line">sudo sh get-docker.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># Add User to docker Group</span></span><br><span class="line">sudo usermod -aG docker [user_name]</span><br></pre></td></tr></table></figure>
+<p>测试了以下看起来一切 OK，命令如下。“Hello World” 真是测试神 Container。然后给他推上 Azure。本地干净了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">docker run hello-world</span><br><span class="line"><span class="comment"># push image to remote</span></span><br><span class="line">az acr login --name [acr registry name]</span><br><span class="line">docker login [acr registry name].azurecr.io</span><br><span class="line">docker tag helo-world [acr registry name].azurecr.io/hello-world</span><br><span class="line">docker push [acr registry name].azurecr.io/hello-world</span><br><span class="line">docker rmi [acr registry name].azurecr.io/hello-world</span><br><span class="line">docker rmi hello-world</span><br></pre></td></tr></table></figure>
+<p>然后开始做远程文件夹，直接支持了 SMB3.0，在树莓派上面其实只要挂在上就可以了。Azure Storage Account 专门提供了脚本生成器，我们需要做的是写入本地文件，给足够的权限运行就 ok。</p>
+<p>挂载完了以后，加上一个超链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount --rbind [mount driver path] [easy access path]</span><br></pre></td></tr></table></figure>
+<p>由于重启会导致超链接失效，所以还需要去 <code>/etc/fstab</code> 添加开机重链接项：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[mount driver path] [easy access path] cifs rw,relatime,vers=3.0,cache=strict,username=raspberrystoragecz,credentials=/etc/smbcredentials/raspberrystoragecz.cred,uid=0,noforceuid,gid=0,noforcegid,addr=20.150.40.104,file_mode=0777,dir_mode=0777,soft,persistenthandles,nounix,serverino,mapposix,rsize=1048576,wsize=1048576,bsize=1048576,echo_interval=60,actimeo=1 0 0</span><br></pre></td></tr></table></figure>
+<p>这样你放入 <code>[easy access path]</code> 的所有文件，就会自动同步到云端。基本上是一个究极简化版本的 NSA。因为我家还有当贝 F3，后面我配置当贝的时候用了这个 NSA 当作传文件的转载。（拔插 USB 太精神污染）。</p>
+
       
     </div>
 
@@ -227,7 +259,7 @@
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/27/Create-ADO-Pipeline/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar_img.jpeg">
       <meta itemprop="name" content="Chenyzh">
       <meta itemprop="description" content="Coffee & Keyboard with the planet.">
     </span>
@@ -247,10 +279,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-27 09:39:57 / Modified: 22:34:05" itemprop="dateCreated datePublished" datetime="2020-12-27T09:39:57+00:00">2020-12-27</time>
+              <time title="Created: 2020-12-27 09:39:57" itemprop="dateCreated datePublished" datetime="2020-12-27T09:39:57+00:00">2020-12-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-28 14:37:41" itemprop="dateModified" datetime="2020-12-28T14:37:41+00:00">2020-12-28</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -313,7 +351,7 @@
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/24/Raspberry-4B-Play-Record/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/avatar_img.jpeg">
       <meta itemprop="name" content="Chenyzh">
       <meta itemprop="description" content="Coffee & Keyboard with the planet.">
     </span>
@@ -341,7 +379,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-27 22:52:08" itemprop="dateModified" datetime="2020-12-27T22:52:08+00:00">2020-12-27</time>
+                <time title="Modified: 2020-12-28 14:37:43" itemprop="dateModified" datetime="2020-12-28T14:37:43+00:00">2020-12-28</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -460,6 +498,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Chenyzh"
+      src="/images/avatar_img.jpeg">
   <p class="site-author-name" itemprop="name">Chenyzh</p>
   <div class="site-description" itemprop="description">Coffee & Keyboard with the planet.</div>
 </div>
@@ -473,13 +513,15 @@
         </a>
       </div>
       <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
         <span class="site-state-item-count">1</span>
-        <span class="site-state-item-name">categories</span>
+        <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
